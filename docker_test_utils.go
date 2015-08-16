@@ -28,7 +28,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 	docker, _ = dockerclient.NewDockerClient(os.Getenv("DOCKER_HOST"), &tlsc)
 
 	buildTestDockerImage()
-	containerId, err := createJenkinsContainer()
+	containerId, err := createTestContainer()
 	if err != nil {
 		fmt.Printf("error creating container: %s", err)
 		c.FailNow()
@@ -48,8 +48,8 @@ func (s *DockerSuite) TearDownSuite(c *C) {
 }
 
 func waitForContainerToStartup() bool {
-	logMessageIndicatingJenkinsHasStarted := "Jenkins is fully up and running"
 	containerName, _ := testConfig.GetContainerName()
+	logMessageIndicatingTestHasStarted, _ := testConfig.GetWaitLogMessage()
 	reader, _ := docker.ContainerLogs(containerName, &dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true})
 	defer reader.Close()
 
@@ -58,7 +58,7 @@ func waitForContainerToStartup() bool {
 
 	go func() {
 		for scanner.Scan() == true {
-			if strings.Contains(scanner.Text(), logMessageIndicatingJenkinsHasStarted) {
+			if strings.Contains(scanner.Text(), logMessageIndicatingTestHasStarted) {
 				success <- true
 				break
 			}
@@ -66,16 +66,14 @@ func waitForContainerToStartup() bool {
 	}()
 
 	go func() {
-		for i := 0; i < 6; i++ {
-			time.Sleep(5 * time.Second)
-		}
+		time.Sleep(time.Duration(testConfig.GetWaitTimeout()) * time.Second)
 		success <- false
 	}()
 
 	return <-success
 }
 
-func createJenkinsContainer() (string, error) {
+func createTestContainer() (string, error) {
 	imageName, _ := testConfig.GetImageName()
 	containerConfig := &dockerclient.ContainerConfig{
 		Image:       imageName + ":latest",

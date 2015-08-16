@@ -9,7 +9,7 @@ import (
 )
 
 func buildTestDockerImage() (string, error) {
-	fmt.Println("Building jenkins image with test data")
+	fmt.Println("Building docker test image")
 
 	dockerFile, err := os.Open("./docker/Dockerfile.tar")
 	if err != nil {

@@ -26,3 +26,11 @@ func (testconfig *DockerTestConfig) GetContainerName() (string, error) {
 func (testconfig *DockerTestConfig) GetImageName() (string, error) {
 	return testconfig.config.String("image")
 }
+
+func (testconfig *DockerTestConfig) GetWaitLogMessage() (string, error) {
+	return testconfig.config.String("wait.log")
+}
+
+func (testconfig *DockerTestConfig) GetWaitTimeout() int {
+	return testconfig.config.UInt("wait.timeout", 180)
+}
