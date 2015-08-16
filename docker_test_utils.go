@@ -29,7 +29,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 	tlsc.InsecureSkipVerify = true
 	docker, _ = dockerclient.NewDockerClient(os.Getenv("DOCKER_HOST"), &tlsc)
 
-	buildTestJenkinsImage()
+	buildTestDockerImage()
 	containerId, err := createJenkinsContainer()
 	if err != nil {
 		fmt.Printf("error creating container: %s", err)
@@ -40,7 +40,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 		fmt.Printf("error starting container: %s", err)
 		c.FailNow()
 	}
-	c.Assert(waitForJenkinsToStartup(), Equals, true)
+	c.Assert(waitForContainerToStartup(), Equals, true)
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
@@ -48,16 +48,7 @@ func (s *DockerSuite) TearDownSuite(c *C) {
 	docker.RemoveContainer(JENKINS_CONTAINER_NAME, false, true)
 }
 
-func NewJenkinsWithTestData() *Jenkins {
-	containerInfo, _ := docker.InspectContainer(JENKINS_CONTAINER_NAME)
-	portMapping := containerInfo.NetworkSettings.Ports["8080/tcp"][0].HostPort
-	hostIp := findIp(os.Getenv("DOCKER_HOST"))
-	var auth Auth
-
-	return NewJenkins(&auth, fmt.Sprintf("http://%s:%s", hostIp, portMapping))
-}
-
-func waitForJenkinsToStartup() bool {
+func waitForContainerToStartup() bool {
 	logMessageIndicatingJenkinsHasStarted := "Jenkins is fully up and running"
 	reader, _ := docker.ContainerLogs(JENKINS_CONTAINER_NAME, &dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true})
 	defer reader.Close()
@@ -98,31 +89,4 @@ func findIp(input string) string {
 
 	regEx := regexp.MustCompile(regexPattern)
 	return regEx.FindString(input)
-}
-
-func buildTestJenkinsImage() (string, error) {
-	fmt.Println("Building jenkins image with test data")
-
-	dockerFile, err := os.Open("./docker/Dockerfile.tar")
-	defer dockerFile.Close()
-
-	reader, err := docker.BuildImage(&dockerclient.BuildImage{
-		Context:        dockerFile,
-		RepoName:       JENKINS_TEST_IMAGE_NAME,
-		SuppressOutput: false,
-		Remove:         true,
-	})
-	defer reader.Close()
-
-	if err != nil {
-		fmt.Printf("error building image: %s", err)
-		return "", err
-	}
-	scanner := bufio.NewScanner(reader)
-
-	for scanner.Scan() == true {
-		fmt.Println(scanner.Text())
-	}
-
-	return JENKINS_TEST_IMAGE_NAME, nil
 }
