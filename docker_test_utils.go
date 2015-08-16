@@ -13,16 +13,14 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-const (
-	JENKINS_CONTAINER_NAME  = "jenkins-test"
-	JENKINS_TEST_IMAGE_NAME = "jenkins-test-image"
-)
-
 type DockerSuite struct{}
 
 var docker *dockerclient.DockerClient
+var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
+	testConfig, _ = NewConfig()
+
 	var tlsc tls.Config
 	cert, _ := tls.LoadX509KeyPair(os.Getenv("DOCKER_CERT_PATH")+"/cert.pem", os.Getenv("DOCKER_CERT_PATH")+"/key.pem")
 	tlsc.Certificates = append(tlsc.Certificates, cert)
@@ -44,13 +42,15 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
-	docker.KillContainer(JENKINS_CONTAINER_NAME, "9")
-	docker.RemoveContainer(JENKINS_CONTAINER_NAME, false, true)
+	containerName, _ := testConfig.GetContainerName()
+	docker.KillContainer(containerName, "9")
+	docker.RemoveContainer(containerName, false, true)
 }
 
 func waitForContainerToStartup() bool {
 	logMessageIndicatingJenkinsHasStarted := "Jenkins is fully up and running"
-	reader, _ := docker.ContainerLogs(JENKINS_CONTAINER_NAME, &dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true})
+	containerName, _ := testConfig.GetContainerName()
+	reader, _ := docker.ContainerLogs(containerName, &dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true})
 	defer reader.Close()
 
 	scanner := bufio.NewScanner(reader)
@@ -76,11 +76,13 @@ func waitForContainerToStartup() bool {
 }
 
 func createJenkinsContainer() (string, error) {
+	imageName, _ := testConfig.GetImageName()
 	containerConfig := &dockerclient.ContainerConfig{
-		Image:       JENKINS_TEST_IMAGE_NAME + ":latest",
+		Image:       imageName + ":latest",
 		AttachStdin: false,
 		Tty:         false}
-	return docker.CreateContainer(containerConfig, JENKINS_CONTAINER_NAME)
+	containerName, _ := testConfig.GetContainerName()
+	return docker.CreateContainer(containerConfig, containerName)
 }
 
 func findIp(input string) string {

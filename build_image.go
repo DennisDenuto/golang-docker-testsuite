@@ -17,9 +17,10 @@ func buildTestDockerImage() (string, error) {
 	}
 	defer dockerFile.Close()
 
+	imageName, _ := testConfig.GetImageName()
 	reader, err := docker.BuildImage(&dockerclient.BuildImage{
 		Context:        dockerFile,
-		RepoName:       JENKINS_TEST_IMAGE_NAME,
+		RepoName:       imageName,
 		SuppressOutput: false,
 		Remove:         true,
 	})
@@ -35,5 +36,5 @@ func buildTestDockerImage() (string, error) {
 		fmt.Println(scanner.Text())
 	}
 
-	return JENKINS_TEST_IMAGE_NAME, nil
+	return imageName, nil
 }
