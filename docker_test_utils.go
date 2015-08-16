@@ -19,7 +19,12 @@ var docker *dockerclient.DockerClient
 var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
-	testConfig, _ = NewConfig()
+	var err error = nil
+	testConfig, err = NewConfig()
+	if err != nil {
+		fmt.Printf("error parsing config yaml file: %s", err)
+		c.FailNow()
+	}
 
 	var tlsc tls.Config
 	cert, _ := tls.LoadX509KeyPair(os.Getenv("DOCKER_CERT_PATH")+"/cert.pem", os.Getenv("DOCKER_CERT_PATH")+"/key.pem")
@@ -27,8 +32,12 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 	tlsc.InsecureSkipVerify = true
 	docker, _ = dockerclient.NewDockerClient(os.Getenv("DOCKER_HOST"), &tlsc)
 
-	buildTestDockerImage()
-	containerId, err := createTestContainer()
+	if testConfig.HasBuildConfig() {
+		buildTestDockerImage()
+	}
+
+	containerName, _ := testConfig.GetContainerName()
+	containerId, err := createTestContainer(containerName)
 	if err != nil {
 		fmt.Printf("error creating container: %s", err)
 		c.FailNow()
@@ -73,13 +82,12 @@ func waitForContainerToStartup() bool {
 	return <-success
 }
 
-func createTestContainer() (string, error) {
+func createTestContainer(containerName string) (string, error) {
 	imageName, _ := testConfig.GetImageName()
 	containerConfig := &dockerclient.ContainerConfig{
 		Image:       imageName + ":latest",
 		AttachStdin: false,
 		Tty:         false}
-	containerName, _ := testConfig.GetContainerName()
 	return docker.CreateContainer(containerConfig, containerName)
 }
 

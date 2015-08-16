@@ -16,7 +16,7 @@ func NewConfig() (*DockerTestConfig, error) {
 		return &DockerTestConfig{}, err
 	}
 	config, err := config.ParseYamlFile(file.Name())
-	return &DockerTestConfig{config}, nil
+	return &DockerTestConfig{config}, err
 }
 
 func (testconfig *DockerTestConfig) GetContainerName() (string, error) {
@@ -33,4 +33,9 @@ func (testconfig *DockerTestConfig) GetWaitLogMessage() (string, error) {
 
 func (testconfig *DockerTestConfig) GetWaitTimeout() int {
 	return testconfig.config.UInt("wait.timeout", 180)
+}
+
+func (testconfig *DockerTestConfig) HasBuildConfig() bool {
+	_, err := testconfig.config.Get("build.dockerfile_dir")
+	return err == nil
 }
