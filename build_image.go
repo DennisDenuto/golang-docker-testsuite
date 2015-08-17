@@ -8,7 +8,7 @@ import (
 	"github.com/samalba/dockerclient"
 )
 
-func buildTestDockerImage() (string, error) {
+func buildDockerImage() (string, error) {
 	fmt.Println("Building docker test image")
 
 	dockerFile, err := os.Open("./docker/Dockerfile.tar")

@@ -21,27 +21,17 @@ var testConfig *DockerTestConfig
 func (s *DockerSuite) SetUpSuite(c *C) {
 	var err error = nil
 	testConfig, err = NewConfig()
-	if err != nil {
-		fmt.Printf("error parsing config yaml file: %s", err)
-		c.FailNow()
-	}
+	failOnError(err, c)
 
-	var tlsc tls.Config
-	cert, _ := tls.LoadX509KeyPair(os.Getenv("DOCKER_CERT_PATH")+"/cert.pem", os.Getenv("DOCKER_CERT_PATH")+"/key.pem")
-	tlsc.Certificates = append(tlsc.Certificates, cert)
-	tlsc.InsecureSkipVerify = true
-	docker, _ = dockerclient.NewDockerClient(os.Getenv("DOCKER_HOST"), &tlsc)
+	err = initDockerClient()
+	failOnError(err, c)
 
 	if testConfig.HasBuildConfig() {
-		buildTestDockerImage()
+		buildDockerImage()
 	}
 
-	containerName, _ := testConfig.GetContainerName()
-	containerId, err := createTestContainer(containerName)
-	if err != nil {
-		fmt.Printf("error creating container: %s", err)
-		c.FailNow()
-	}
+	containerId, err := createTestContainer(getContainerName())
+	failOnError(err, c)
 
 	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PublishAllPorts: true}); err != nil {
 		fmt.Printf("error starting container: %s", err)
@@ -51,15 +41,44 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
-	containerName, _ := testConfig.GetContainerName()
+	containerName := getContainerName()
 	docker.KillContainer(containerName, "9")
 	docker.RemoveContainer(containerName, false, true)
 }
 
+func initDockerClient() error {
+	var err error
+	var tlsc tls.Config
+	var cert tls.Certificate
+
+	cert, err = tls.LoadX509KeyPair(getX509KeyPairConfig())
+	if err != nil {
+		return err
+	}
+	tlsc.Certificates = append(tlsc.Certificates, cert)
+	tlsc.InsecureSkipVerify = true
+	docker, err = dockerclient.NewDockerClient(os.Getenv("DOCKER_HOST"), &tlsc)
+	return err
+}
+
+func getX509KeyPairConfig() (certFile, keyFile string) {
+	return os.Getenv("DOCKER_CERT_PATH") + "/cert.pem", os.Getenv("DOCKER_CERT_PATH") + "/key.pem"
+}
+
+func getContainerName() string {
+	return testConfig.GetContainerName()
+}
+
 func waitForContainerToStartup() bool {
-	containerName, _ := testConfig.GetContainerName()
 	logMessageIndicatingTestHasStarted, _ := testConfig.GetWaitLogMessage()
-	reader, _ := docker.ContainerLogs(containerName, &dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true})
+	reader, err := docker.ContainerLogs(
+		getContainerName(),
+		&dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true},
+	)
+	if err != nil {
+		fmt.Printf("error reading container logs: %s", err)
+		return false
+	}
 	defer reader.Close()
 
 	scanner := bufio.NewScanner(reader)
@@ -83,12 +102,22 @@ func waitForContainerToStartup() bool {
 }
 
 func createTestContainer(containerName string) (string, error) {
-	imageName, _ := testConfig.GetImageName()
+	imageName, err := testConfig.GetImageName()
+	if err != nil {
+		return "", err
+	}
 	containerConfig := &dockerclient.ContainerConfig{
 		Image:       imageName + ":latest",
 		AttachStdin: false,
 		Tty:         false}
 	return docker.CreateContainer(containerConfig, containerName)
+}
+
+func failOnError(err error, c *C) {
+	if err != nil {
+		fmt.Printf("error: %s", err)
+		c.FailNow()
+	}
 }
 
 func findIp(input string) string {

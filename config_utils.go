@@ -19,8 +19,8 @@ func NewConfig() (*DockerTestConfig, error) {
 	return &DockerTestConfig{config}, err
 }
 
-func (testconfig *DockerTestConfig) GetContainerName() (string, error) {
-	return testconfig.config.String("container_name")
+func (testconfig *DockerTestConfig) GetContainerName() string {
+	return testconfig.config.UString("container_name", "test-container-name")
 }
 
 func (testconfig *DockerTestConfig) GetImageName() (string, error) {
