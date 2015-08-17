@@ -10,8 +10,8 @@ type DockerTestConfig struct {
 	config *config.Config
 }
 
-func NewConfig() (*DockerTestConfig, error) {
-	file, err := os.OpenFile("docker/config.yaml", os.O_RDONLY, 0666)
+func NewConfig(configYamlFile string) (*DockerTestConfig, error) {
+	file, err := os.OpenFile(configYamlFile, os.O_RDONLY, 0666)
 	if err != nil {
 		return &DockerTestConfig{}, err
 	}

@@ -13,14 +13,16 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-type DockerSuite struct{}
+type DockerSuite struct {
+	ConfigYaml string
+}
 
 var docker *dockerclient.DockerClient
 var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
 	var err error = nil
-	testConfig, err = NewConfig()
+	testConfig, err = NewConfig(s.ConfigYaml)
 	failOnError(err, c)
 
 	err = initDockerClient()
