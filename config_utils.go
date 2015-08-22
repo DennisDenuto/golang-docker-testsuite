@@ -2,12 +2,19 @@ package gotestwithdocker
 
 import (
 	"os"
+	"strings"
 
 	"github.com/olebedev/config"
+	"github.com/samalba/dockerclient"
 )
 
 type DockerTestConfig struct {
 	config *config.Config
+}
+
+func NewConfigContent(configContent string) (*DockerTestConfig, error) {
+	config, err := config.ParseYaml(configContent)
+	return &DockerTestConfig{config}, err
 }
 
 func NewConfig(configYamlFile string) (*DockerTestConfig, error) {
@@ -25,6 +32,19 @@ func (testconfig *DockerTestConfig) GetContainerName() string {
 
 func (testconfig *DockerTestConfig) GetImageName() (string, error) {
 	return testconfig.config.String("image")
+}
+
+func (testconfig *DockerTestConfig) GetExposePorts() (map[string][]dockerclient.PortBinding, error) {
+	var exposePorts = make(map[string][]dockerclient.PortBinding, 0)
+	ports, err := testconfig.config.List("ports")
+	for _, v := range ports {
+		yamlPortValue, _ := v.(string)
+		portSplit := strings.Split(yamlPortValue, ":")
+		containerPort := portSplit[0] + "/tcp"
+		hostPort := portSplit[1]
+		exposePorts[containerPort] = []dockerclient.PortBinding{{HostPort: hostPort}}
+	}
+	return exposePorts, err
 }
 
 func (testconfig *DockerTestConfig) GetWaitLogMessage() (string, error) {

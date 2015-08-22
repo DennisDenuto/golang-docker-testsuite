@@ -35,7 +35,9 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 	containerId, err := createTestContainer(getContainerName())
 	failOnError(err, c)
 
-	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PublishAllPorts: true}); err != nil {
+	exposedPorts, _ := testConfig.GetExposePorts()
+	fmt.Println(exposedPorts)
+	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PortBindings: exposedPorts}); err != nil {
 		fmt.Printf("error starting container: %s", err)
 		c.FailNow()
 	}
