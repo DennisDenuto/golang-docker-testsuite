@@ -41,8 +41,12 @@ func BuildDockerFileTar(directoryPath string) (string, error) {
 
 func buildDockerImage() (string, error) {
 	fmt.Println("Building docker test image")
-
-	dockerFile, err := os.Open("./docker/Dockerfile.tar")
+	buildContextDir, err := testConfig.GetBuildContextDirectory()
+	dockerFileTar, err := BuildDockerFileTar(buildContextDir)
+	if err != nil {
+		return "", err
+	}
+	dockerFile, err := os.Open(dockerFileTar)
 	if err != nil {
 		return "", err
 	}

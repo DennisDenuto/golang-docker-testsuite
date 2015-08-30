@@ -55,6 +55,10 @@ func (testconfig *DockerTestConfig) GetWaitTimeout() int {
 	return testconfig.config.UInt("wait.timeout", 180)
 }
 
+func (testconfig *DockerTestConfig) GetBuildContextDirectory() (string, error) {
+	return testconfig.config.String("build.dockerfile_dir")
+}
+
 func (testconfig *DockerTestConfig) HasBuildConfig() bool {
 	_, err := testconfig.config.Get("build.dockerfile_dir")
 	return err == nil

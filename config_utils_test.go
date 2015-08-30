@@ -28,3 +28,22 @@ ports:
 		t.Fail()
 	}
 }
+
+func TestGetDockerBuildDirectory(t *testing.T) {
+	yamlContent := `
+build:
+   dockerfile_dir: ./some-directory/
+`
+	config, err := NewConfigContent(yamlContent)
+	buildDirectory, err := config.GetBuildContextDirectory()
+
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
+	}
+
+	if buildDirectory != "./some-directory/" {
+		fmt.Printf("yaml parsing failed, expected :%s, GOT: %s", "./some-directory/", buildDirectory)
+		t.Fail()
+	}
+}
