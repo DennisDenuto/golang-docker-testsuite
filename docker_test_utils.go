@@ -34,13 +34,14 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 
 	if testConfig.HasBuildConfig() {
 		buildDockerImage()
+	} else {
+		pullDockerImage()
 	}
 
 	containerId, err := createTestContainer(getContainerName())
 	failOnError(err, c)
 
 	exposedPorts, _ := testConfig.GetExposePorts()
-	fmt.Println(exposedPorts)
 	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PortBindings: exposedPorts}); err != nil {
 		fmt.Printf("error starting container: %s", err)
 		c.FailNow()
@@ -49,6 +50,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
+	fmt.Println("shutting down: " + getContainerName())
 	containerName := getContainerName()
 	docker.KillContainer(containerName, "9")
 	docker.RemoveContainer(containerName, false, true)
@@ -114,6 +116,8 @@ func createTestContainer(containerName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("creating container with image: " + imageName + ":latest")
+
 	containerConfig := &dockerclient.ContainerConfig{
 		Image:       imageName + ":latest",
 		AttachStdin: false,

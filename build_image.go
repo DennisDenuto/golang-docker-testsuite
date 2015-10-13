@@ -39,6 +39,20 @@ func BuildDockerFileTar(directoryPath string) (string, error) {
 	return dockerFileTar.Name(), nil
 }
 
+func pullDockerImage() (string, error) {
+	fmt.Println("Pulling docker test image")
+	imageName, _ := testConfig.GetImageName()
+	fmt.Println(imageName)
+	err := docker.PullImage(imageName, &dockerclient.AuthConfig{})
+
+	if err != nil {
+		fmt.Printf("error building image: %s", err)
+		return "", err
+	}
+
+	return imageName, nil
+}
+
 func buildDockerImage() (string, error) {
 	fmt.Println("Building docker test image")
 	buildContextDir, err := testConfig.GetBuildContextDirectory()
