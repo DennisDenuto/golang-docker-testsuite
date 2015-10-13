@@ -11,6 +11,8 @@ The library will spin it up for your tests to use and tear it down at the end.
 Inside your test file:
 
         import "github.com/DennisDenuto/golang-docker-testsuite"
+	import . "gopkg.in/check.v1"
+
 
         func Test(t *testing.T) { TestingT(t) }
 
@@ -24,6 +26,16 @@ minimalistic docker-config.yaml
 
         container_name: some-name
         image: a-docker-image
+
+docker-config.yaml with exposed ports:
+
+	ports:
+		- 8080:8080
+
+docker-config.yaml wait for container to start up from grepping log message
+
+	wait:
+		log: Some msg from StdOut you should wait for before running tests
 
 ## Contributing
 
