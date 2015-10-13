@@ -22,6 +22,10 @@ var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
 	var err error = nil
+	if s.SetUpSuite == nil {
+		fmt.Println("Missing docker config file")
+		c.FailNow()
+	}
 	testConfig, err = NewConfig(s.ConfigYaml)
 	failOnError(err, c)
 
