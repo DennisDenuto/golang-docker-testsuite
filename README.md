@@ -21,6 +21,11 @@ type LocalDockerSuite struct {
 }
 
 var _ = Suite(&LocalDockerSuite{gotestwithdocker.DockerSuite{ConfigYaml: "./docker-config.yaml"}})
+
+func (s *LocalDockerSuite) TestHappyCase(c *C) {
+	// your test code here: 
+	// to get access to the host ip your test container is running on: os.Getenv("DOCKER_HOST_IP")
+}
 ```
 minimalistic docker-config.yaml
 ```yaml
