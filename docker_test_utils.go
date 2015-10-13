@@ -21,6 +21,8 @@ var docker *dockerclient.DockerClient
 var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
+	setupEnvVariables()
+
 	var err error = nil
 	if s.SetUpSuite == nil {
 		fmt.Println("Missing docker config file")
@@ -54,6 +56,10 @@ func (s *DockerSuite) TearDownSuite(c *C) {
 	containerName := getContainerName()
 	docker.KillContainer(containerName, "9")
 	docker.RemoveContainer(containerName, false, true)
+}
+
+func setupEnvVariables() {
+	os.Setenv("DOCKER_HOST_IP", findIp(os.Getenv("DOCKER_HOST")))
 }
 
 func initDockerClient() error {
