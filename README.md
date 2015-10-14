@@ -1,4 +1,5 @@
 # gotestwithdocker
+[![Build Status](https://travis-ci.org/DennisDenuto/golang-docker-testsuite.svg?branch=master)](https://travis-ci.org/DennisDenuto/golang-docker-testsuite)
 
 A testing library (for golang projects) to assist in writing integration tests with docker!.
 
