@@ -24,7 +24,8 @@ var _ = Suite(&LocalDockerSuite{gotestwithdocker.DockerSuite{ConfigYaml: "./dock
 
 func (s *LocalDockerSuite) TestHappyCase(c *C) {
 	// your test code here: 
-	// to get access to the host ip your test container is running on: os.Getenv("DOCKER_HOST_IP")
+	// host ip of your test container: os.Getenv("DOCKER_HOST_IP")
+	// host port of exposed container port: os.Getenv("DOCKER_PORTS_8080/tcp")
 }
 ```
 minimalistic docker-config.yaml
