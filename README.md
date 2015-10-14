@@ -43,6 +43,15 @@ docker-config.yaml wait for container to start up from grepping log message
 wait:
 	log: Some msg from StdOut you should wait for before running tests
 ```
+docker-config.yaml build a docker image from a DockerFile
+```yaml
+container_name: test-container-name
+image: image-name-to-use-for-built-docker-image
+build:
+        dockerfile_dir: ./directory-containing-dockerfile
+
+```
+
 ## Contributing
 
 1. Fork it!
