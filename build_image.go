@@ -3,7 +3,6 @@ package gotestwithdocker
 import (
 	"archive/tar"
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -13,12 +12,12 @@ import (
 func BuildDockerFileTar(directoryPath string) (string, error) {
 	dockerFileTar, err := os.Create(os.TempDir() + "/Dockerfile.tar")
 	if err != nil {
-		fmt.Println(err)
+		log.Error("%s", err)
 		return "", err
 	}
 	directories, err := ioutil.ReadDir(directoryPath)
 	if err != nil {
-		fmt.Println(err)
+		log.Error("%s", err)
 		return "", err
 	}
 	tarWriter := tar.NewWriter(dockerFileTar)
@@ -28,7 +27,7 @@ func BuildDockerFileTar(directoryPath string) (string, error) {
 		fileContent, _ := ioutil.ReadFile(directoryPath + "/" + v.Name())
 		header, err := tar.FileInfoHeader(v, "")
 		if err != nil {
-			fmt.Println(err)
+			log.Error("%s", err)
 			return "", err
 		}
 		tarWriter.WriteHeader(header)
@@ -40,13 +39,13 @@ func BuildDockerFileTar(directoryPath string) (string, error) {
 }
 
 func pullDockerImage() (string, error) {
-	fmt.Println("Pulling docker test image")
+	log.Info("Pulling docker test image")
 	imageName, _ := testConfig.GetImageName()
-	fmt.Println(imageName)
+	log.Info(imageName)
 	err := docker.PullImage(imageName, &dockerclient.AuthConfig{})
 
 	if err != nil {
-		fmt.Printf("error building image: %s", err)
+		log.Error("error building image: %s", err)
 		return "", err
 	}
 
@@ -54,7 +53,7 @@ func pullDockerImage() (string, error) {
 }
 
 func buildDockerImage() (string, error) {
-	fmt.Println("Building docker test image")
+	log.Notice("Building docker test image")
 	buildContextDir, err := testConfig.GetBuildContextDirectory()
 	dockerFileTar, err := BuildDockerFileTar(buildContextDir)
 	if err != nil {
@@ -76,13 +75,13 @@ func buildDockerImage() (string, error) {
 	defer reader.Close()
 
 	if err != nil {
-		fmt.Printf("error building image: %s", err)
+		log.Error("error building image: %s", err)
 		return "", err
 	}
 	scanner := bufio.NewScanner(reader)
 
 	for scanner.Scan() == true {
-		fmt.Println(scanner.Text())
+		log.Notice(scanner.Text())
 	}
 
 	return imageName, nil

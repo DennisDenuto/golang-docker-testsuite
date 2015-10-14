@@ -3,12 +3,12 @@ package gotestwithdocker
 import (
 	"bufio"
 	"crypto/tls"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/op/go-logging"
 	"github.com/samalba/dockerclient"
 	. "gopkg.in/check.v1"
 )
@@ -19,12 +19,20 @@ type DockerSuite struct {
 
 var docker *dockerclient.DockerClient
 var testConfig *DockerTestConfig
+var log = logging.MustGetLogger("example")
+
+var format = logging.MustStringFormatter(
+	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
+)
 
 func (s *DockerSuite) SetUpSuite(c *C) {
+	backend2 := logging.NewLogBackend(os.Stderr, "", 0)
+	backend2Formatter := logging.NewBackendFormatter(backend2, format)
+	logging.SetBackend(backend2Formatter)
 
 	var err error = nil
 	if s.SetUpSuite == nil {
-		fmt.Println("Missing docker config file")
+		log.Error("Missing docker config file")
 		c.FailNow()
 	}
 	testConfig, err = NewConfig(s.ConfigYaml)
@@ -44,7 +52,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 
 	exposedPorts, _ := testConfig.GetExposePorts()
 	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PublishAllPorts: false, PortBindings: exposedPorts}); err != nil {
-		fmt.Printf("error starting container: %s", err)
+		log.Error("error starting container: %s", err)
 		c.FailNow()
 	}
 	c.Assert(waitForContainerToStartup(), Equals, true)
@@ -52,7 +60,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
-	fmt.Println("shutting down: " + getContainerName())
+	log.Notice("shutting down: " + getContainerName())
 	containerName := getContainerName()
 	docker.KillContainer(containerName, "9")
 	docker.RemoveContainer(containerName, false, true)
@@ -99,7 +107,7 @@ func waitForContainerToStartup() bool {
 		&dockerclient.LogOptions{Stdout: true, Stderr: true, Follow: true},
 	)
 	if err != nil {
-		fmt.Printf("error reading container logs: %s", err)
+		log.Error("error reading container logs: %s", err)
 		return false
 	}
 	defer reader.Close()
@@ -129,7 +137,7 @@ func createTestContainer(containerName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("creating container with image: " + imageName + ":latest")
+	log.Info("creating container with image: " + imageName + ":latest")
 	exposedPorts, _ := testConfig.GetExposePorts()
 	var exposedPortsMap = make(map[string]struct{})
 
@@ -148,7 +156,7 @@ func createTestContainer(containerName string) (string, error) {
 
 func failOnError(err error, c *C) {
 	if err != nil {
-		fmt.Printf("error: %s", err)
+		log.Error("error: %s", err)
 		c.FailNow()
 	}
 }
