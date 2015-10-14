@@ -44,7 +44,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 	failOnError(err, c)
 
 	exposedPorts, _ := testConfig.GetExposePorts()
-	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PortBindings: exposedPorts}); err != nil {
+	if err := docker.StartContainer(containerId, &dockerclient.HostConfig{PublishAllPorts: false, PortBindings: exposedPorts}); err != nil {
 		fmt.Printf("error starting container: %s", err)
 		c.FailNow()
 	}
@@ -123,11 +123,19 @@ func createTestContainer(containerName string) (string, error) {
 		return "", err
 	}
 	fmt.Println("creating container with image: " + imageName + ":latest")
+	exposedPorts, _ := testConfig.GetExposePorts()
+	var exposedPortsMap = make(map[string]struct{})
+
+	for k, _ := range exposedPorts {
+		var emptyValue struct{}
+		exposedPortsMap[k] = emptyValue
+	}
 
 	containerConfig := &dockerclient.ContainerConfig{
-		Image:       imageName + ":latest",
-		AttachStdin: false,
-		Tty:         false}
+		Image:        imageName + ":latest",
+		ExposedPorts: exposedPortsMap,
+		AttachStdin:  false,
+		Tty:          false}
 	return docker.CreateContainer(containerConfig, containerName)
 }
 

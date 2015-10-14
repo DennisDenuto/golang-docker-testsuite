@@ -2,6 +2,7 @@ package gotestwithdocker
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/olebedev/config"
@@ -39,10 +40,14 @@ func (testconfig *DockerTestConfig) GetExposePorts() (map[string][]dockerclient.
 	ports, err := testconfig.config.List("ports")
 	for _, v := range ports {
 		yamlPortValue, _ := v.(string)
-		portSplit := strings.Split(yamlPortValue, ":")
-		containerPort := portSplit[0] + "/tcp"
-		hostPort := portSplit[1]
-		exposePorts[containerPort] = []dockerclient.PortBinding{{HostPort: hostPort}}
+		if strings.Contains(yamlPortValue, ":") {
+			portSplit := strings.Split(yamlPortValue, ":")
+			containerPort := portSplit[0] + "/tcp"
+			hostPort := portSplit[1]
+			exposePorts[containerPort] = []dockerclient.PortBinding{{HostPort: hostPort}}
+		} else {
+			exposePorts[strconv.Itoa(v.(int))+"/tcp"] = []dockerclient.PortBinding{{HostIp: "0.0.0.0"}}
+		}
 	}
 	return exposePorts, err
 }
