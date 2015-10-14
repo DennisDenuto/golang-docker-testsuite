@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Golang-docker-testsuite by DennisDenuto</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Golang-docker-testsuite</h1>
+        <p>golang integration tests with docker</p>
+
+        <p class="view"><a href="https://github.com/DennisDenuto/golang-docker-testsuite">View the Project on GitHub <small>DennisDenuto/golang-docker-testsuite</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/DennisDenuto/golang-docker-testsuite/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/DennisDenuto/golang-docker-testsuite/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/DennisDenuto/golang-docker-testsuite">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="gotestwithdocker" class="anchor" href="#gotestwithdocker" aria-hidden="true"><span class="octicon octicon-link"></span></a>gotestwithdocker</h1>
+
+<p><a href="https://travis-ci.org/DennisDenuto/golang-docker-testsuite"><img src="https://travis-ci.org/DennisDenuto/golang-docker-testsuite.svg?branch=master" alt="Build Status"></a></p>
+
+<p>A testing library (for golang projects) to assist in writing integration tests with docker!.</p>
+
+<p>You specify the docker container you want running for your integration tests.</p>
+
+<p>The library will spin it up for your tests to use and tear it down at the end.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Inside your test file:</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">"</span>github.com/DennisDenuto/golang-docker-testsuite<span class="pl-pds">"</span></span>
+<span class="pl-k">import</span> . <span class="pl-s"><span class="pl-pds">"</span>gopkg.in/check.v1<span class="pl-pds">"</span></span>
+
+
+<span class="pl-k">func</span> <span class="pl-en">Test</span>(<span class="pl-v">t</span> *<span class="pl-v">testing</span>.<span class="pl-v">T</span>) { <span class="pl-c1">TestingT</span>(t) }
+
+<span class="pl-k">type</span> <span class="pl-v">LocalDockerSuite</span> <span class="pl-k">struct</span> {
+    gotestwithdocker.<span class="pl-smi">DockerSuite</span>
+}
+
+<span class="pl-k">var</span> <span class="pl-smi">_</span> = <span class="pl-c1">Suite</span>(&amp;LocalDockerSuite{gotestwithdocker.<span class="pl-smi">DockerSuite</span>{ConfigYaml: <span class="pl-s"><span class="pl-pds">"</span>./docker-config.yaml<span class="pl-pds">"</span></span>}})
+
+<span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">s</span> *<span class="pl-v">LocalDockerSuite</span>) <span class="pl-en">TestHappyCase</span></span>(<span class="pl-v">c</span> *<span class="pl-v">C</span>) {
+    <span class="pl-c">// your test code here: </span>
+    <span class="pl-c">// host ip of your test container: os.Getenv("DOCKER_HOST_IP")</span>
+    <span class="pl-c">// host port of exposed container port: os.Getenv("DOCKER_PORTS_8080/tcp")</span>
+}</pre></div>
+
+<p>minimalistic docker-config.yaml</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-s"><span class="pl-ent">container_name:</span> <span class="pl-s">some-name</span></span>
+<span class="pl-s"><span class="pl-ent">image:</span> <span class="pl-s">a-docker-image</span></span></pre></div>
+
+<p>docker-config.yaml with exposed ports:</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-s"><span class="pl-ent">ports:</span></span>
+    <span class="pl-s">- <span class="pl-s">8080:8080</span></span></pre></div>
+
+<p>docker-config.yaml wait for container to start up from grepping log message</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-s"><span class="pl-ent">wait:</span></span>
+    <span class="pl-s"><span class="pl-ent">log:</span> <span class="pl-s">Some msg from StdOut you should wait for before running tests</span></span></pre></div>
+
+<p>docker-config.yaml build a docker image from a DockerFile</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-s"><span class="pl-ent">container_name:</span> <span class="pl-s">test-container-name</span></span>
+<span class="pl-s"><span class="pl-ent">image:</span> <span class="pl-s">image-name-to-use-for-built-docker-image</span></span>
+<span class="pl-s"><span class="pl-ent">build:</span></span>
+        <span class="pl-s"><span class="pl-ent">dockerfile_dir:</span> <span class="pl-s">./directory-containing-dockerfile</span></span>
+</pre></div>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h2>
+
+<ol>
+<li>Fork it!</li>
+<li>Create your feature branch: <code>git checkout -b my-new-feature</code>
+</li>
+<li>Commit your changes: <code>git commit -am 'Add some feature'</code>
+</li>
+<li>Push to the branch: <code>git push origin my-new-feature</code>
+</li>
+<li>Submit a pull request :D</li>
+</ol>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/DennisDenuto">DennisDenuto</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
