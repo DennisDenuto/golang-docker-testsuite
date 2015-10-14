@@ -21,7 +21,6 @@ var docker *dockerclient.DockerClient
 var testConfig *DockerTestConfig
 
 func (s *DockerSuite) SetUpSuite(c *C) {
-	setupEnvVariables()
 
 	var err error = nil
 	if s.SetUpSuite == nil {
@@ -49,6 +48,7 @@ func (s *DockerSuite) SetUpSuite(c *C) {
 		c.FailNow()
 	}
 	c.Assert(waitForContainerToStartup(), Equals, true)
+	setupEnvVariables()
 }
 
 func (s *DockerSuite) TearDownSuite(c *C) {
@@ -60,6 +60,13 @@ func (s *DockerSuite) TearDownSuite(c *C) {
 
 func setupEnvVariables() {
 	os.Setenv("DOCKER_HOST_IP", findIp(os.Getenv("DOCKER_HOST")))
+	containerInfo, _ := docker.InspectContainer(getContainerName())
+	ports := containerInfo.NetworkSettings.Ports
+	for k, v := range ports {
+		for _, vv := range v {
+			os.Setenv("DOCKER_PORTS_"+k, vv.HostPort)
+		}
+	}
 }
 
 func initDockerClient() error {
